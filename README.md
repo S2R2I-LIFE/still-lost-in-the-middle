@@ -1,7 +1,78 @@
-# Lost in the Middle: How Language Models Use Long Contexts
+# Lost in the Middle: Ollama Model Replication (2024)
 
-This repository contains accompanying material for [Lost in the Middle: How
-Language Models Use Long Contexts](https://arxiv.org/abs/2307.03172).
+> **Replication Study**: This repository replicates the "Lost in the Middle" experiments using modern locally-available Ollama models (Gemma3, Mistral) from 2024 to test whether position bias persists in contemporary language models.
+
+## 🔬 About This Replication
+
+This work extends the original ["Lost in the Middle: How Language Models Use Long Contexts"](https://arxiv.org/abs/2307.03172) (Liu et al., 2023) research by:
+
+- **Testing modern 2024 models**: gemma3:4b, mistral-small:22b, gemma3:27b
+- **Using local inference**: All experiments run via Ollama (no API costs)
+- **Comparing architectures**: Gemma's interleaved local/global attention vs Mistral's standard attention
+- **Full replication**: Multi-document QA with 10-document position bias experiments
+
+### Key Findings (Preliminary)
+
+**Oracle Performance** (Upper Bound - Single Gold Document):
+- gemma3:4b: **89.15%** accuracy (2,365/2,655 correct)
+- gemma3:27b: **90.02%** accuracy (2,389/2,655 correct)
+- mistral-small:22b: Testing in progress
+
+**Comparison with Original Paper** (2023):
+- Original MPT-30B-Instruct: 81.66% oracle accuracy
+- Our gemma3:27b (2024): **90.02%** (+8.4% improvement)
+
+Modern models show better baseline performance, but do they still exhibit the U-shaped position bias curve? Results pending.
+
+### Quick Start (Ollama Models)
+
+```bash
+# Install minimal dependencies (no GPU packages needed - Ollama handles it)
+pip install -r requirements-ollama.txt
+
+# Ensure Ollama is running
+ollama serve
+
+# Pull models
+ollama pull gemma3:4b
+ollama pull mistral-small:22b
+ollama pull gemma3:27b
+
+# Run experiments (see Context/ directory for full documentation)
+python scripts/get_qa_responses_from_ollama.py \
+    --model gemma3:4b \
+    --input-path qa_data/nq-open-oracle.jsonl.gz \
+    --output-path results/predictions.jsonl.gz \
+    --temperature 0.0 \
+    --max-new-tokens 100
+```
+
+### Documentation
+
+All replication documentation is in the [`Context/`](./Context/) directory:
+- [`Context/summary.md`](./Context/summary.md) - Original paper summary
+- [`Context/models.txt`](./Context/models.txt) - Selected models and rationale
+- [`Context/specs.md`](./Context/specs.md) - Detailed model specifications
+- [`Context/PILOT_RESULTS.md`](./Context/PILOT_RESULTS.md) - Pilot test findings
+- [`Context/RESULTS_SUMMARY.md`](./Context/RESULTS_SUMMARY.md) - Full experimental results
+- [`Context/CHANGELOG.md`](./Context/CHANGELOG.md) - Code modifications log
+
+### New Code (Ollama Integration)
+
+- [`src/lost_in_the_middle/ollama_client.py`](./src/lost_in_the_middle/ollama_client.py) - Ollama API client
+- [`scripts/get_qa_responses_from_ollama.py`](./scripts/get_qa_responses_from_ollama.py) - QA experiments
+- [`scripts/run_after_mistral.sh`](./scripts/run_after_mistral.sh) - Automated experiment runner
+- [`scripts/monitor_progress.sh`](./scripts/monitor_progress.sh) - Progress monitoring
+
+---
+
+# Original Repository: Lost in the Middle
+
+**Original Authors**: Nelson F. Liu, Kevin Lin, John Hewitt, Ashwin Paranjape, Michele Bevilacqua, Fabio Petroni, Percy Liang
+
+**Paper**: [Lost in the Middle: How Language Models Use Long Contexts](https://arxiv.org/abs/2307.03172)
+
+This repository contains the original accompanying material for the paper.
 
 ## Table of Contents
 
