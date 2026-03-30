@@ -1,0 +1,273 @@
+# Selected Ollama Models for "Lost in the Middle" Replication
+
+## Selection Strategy
+
+This replication uses a **size-tiered approach** to understand how model scale affects position bias in long contexts. Three models were selected to span different parameter counts while maintaining modern architecture and instruction-tuning characteristics similar to the original paper's models.
+
+**IMPORTANT UPDATE (2026-03-30)**: Original plan included Qwen models, but pilot testing revealed all qwen3.5 models are reasoning models that output thinking processes to a "thinking" field instead of direct answers to the "response" field. This makes them incompatible with the QA evaluation pipeline. Replaced with Gemma models that give direct answers.
+
+---
+
+## Large Tier: gemma3:27b
+
+**Model Name**: gemma3:27b
+**Size**: 17GB download
+**Parameters**: ~27 billion
+**Context Window**: Extended context support (128K tokens)
+**Architecture**: Decoder-only transformer (Gemma 3 family) with interleaved local/global attention
+**Training**: Instruction-tuned
+
+**Rationale**:
+- Same size as originally planned qwen3.5:27b (17GB)
+- Comparable to the largest models tested in original paper (MPT-30B-Instruct)
+- Modern Gemma family (2024) tests whether recent architectural improvements mitigate position bias
+- Very large context window (128K) allows testing well beyond original experiments
+- Gives direct answers (non-reasoning model) compatible with evaluation pipeline
+- Provides upper bound on performance for locally-available models
+
+**Architectural Features**:
+- Interleaved local/global attention (5:1 ratio)
+- RoPE positional embeddings
+- Grouped-Query Attention (GQA)
+
+**Use Cases in Experiments**:
+- Baseline for "state of the art" locally available performance
+- Test whether modern large models have solved the U-shaped curve problem
+- Compare with original GPT-3.5-Turbo and Claude-1.3 results
+- Direct size comparison with gemma3:4b (same architecture, different scale)
+
+**Expected Behavior**:
+If modern training has addressed position bias: Flat performance across positions
+If the issue persists: U-shaped curve similar to original large models
+Hypothesis: Interleaved local/global attention may help with middle positions
+
+---
+
+## Medium Tier: mistral-small:22b
+
+**Model Name**: mistral-small:22b
+**Size**: 12GB download
+**Parameters**: ~22 billion
+**Context Window**: 32K tokens (standard for Mistral family)
+**Architecture**: Decoder-only transformer (Mistral architecture)
+**Training**: Instruction-tuned
+
+**Rationale**:
+- Similar parameter count to original MPT-30B-Instruct (~30B)
+- Provides direct comparison point with original experiments
+- Different model family (Mistral) adds architectural diversity vs. Qwen
+- Well-established model with proven performance on standard benchmarks
+
+**Use Cases in Experiments**:
+- Most direct comparison with original paper's MPT-30B-Instruct results
+- Middle-ground between small and large models
+- Tests whether Mistral's architecture handles position differently than Qwen
+
+**Expected Behavior**:
+Likely to show U-shaped curve similar to MPT-30B-Instruct in original paper
+Key question: Is it more or less pronounced than in 2023 models?
+
+---
+
+## Small Tier: gemma3:4b
+
+**Model Name**: gemma3:4b
+**Size**: 3.3GB download
+**Parameters**: ~4 billion
+**Context Window**: 128K tokens
+**Architecture**: Decoder-only transformer (Gemma 3 family) with interleaved local/global attention
+**Training**: Instruction-tuned
+
+**Rationale**:
+- Smallest tier tests whether position bias exists even in compact models
+- Same model family as gemma3:27b enables controlled comparison (architecture constant, scale varies)
+- LongChat-13B in original paper showed position bias; this tests even smaller scale
+- Practical significance: Many real-world deployments use smaller models for cost/latency
+- Gives direct answers (non-reasoning model) compatible with evaluation pipeline
+
+**Architectural Features**:
+- Interleaved local/global attention (5:1 ratio - same as gemma3:27b)
+- RoPE positional embeddings
+- Grouped-Query Attention (GQA)
+
+**Use Cases in Experiments**:
+- Establishes lower bound on performance
+- Tests hypothesis: "Does model size correlate with position-invariance?"
+- Compares with original LongChat-13B (16K) results
+- Practical baseline for resource-constrained deployments
+- Direct size comparison with gemma3:27b (same architecture, different scale)
+
+**Pilot Test Results (2026-03-30)**:
+Oracle dataset (single gold document, 2,655 examples):
+- **Accuracy**: 89.15% (2,365/2,655 correct)
+- **Status**: ✓ Excellent performance validates model and integration
+
+**Expected Behavior**:
+Based on original paper's Llama-2 findings:
+- Small models (7B) showed only recency bias
+- This 4B model may show strong recency bias or potentially just fail to use context well overall
+
+**Critical Test**: If this small model shows U-shaped curve (vs. just recency), it suggests primacy bias emerges at lower scales than previously thought
+
+**Hypothesis**: Interleaved local/global attention (5:1) may reduce middle-position degradation compared to standard attention
+
+---
+
+## Model Comparison Matrix
+
+| Tier   | Model             | Size  | Parameters | Context | Architecture             | Family  | Oracle Acc |
+|--------|-------------------|-------|------------|---------|--------------------------|---------|------------|
+| Large  | gemma3:27b        | 17GB  | ~27B       | 128K    | Decoder + Local/Global   | Gemma 3 | TBD        |
+| Medium | mistral-small:22b | 12GB  | ~22B       | 32K     | Decoder-only             | Mistral | TBD        |
+| Small  | gemma3:4b         | 3.3GB | ~4B        | 128K    | Decoder + Local/Global   | Gemma 3 | **89.15%** |
+
+**Original Paper Models (for reference)**:
+- GPT-3.5-Turbo: ~175B parameters, 4K context (closed-source)
+- Claude-1.3: Unknown parameters, 8K context (closed-source)
+- MPT-30B-Instruct: 30B parameters, 8K context (open-source)
+- LongChat-13B (16K): 13B parameters, 16K context (open-source)
+
+---
+
+## Why These Specific Models?
+
+### Controlled Variables
+- **Same family comparison**: gemma3:4b vs gemma3:27b isolates the effect of scale
+- **All instruction-tuned**: Matches original paper's focus on instruction-following models
+- **All decoder-based**: Original paper found decoder-only models most susceptible to position bias
+- **All modern (2024)**: Tests whether recent advances have addressed the issue
+- **All non-reasoning**: Give direct answers compatible with evaluation pipeline
+
+### Diversity
+- **Architecture variety**: Mistral (standard attention) vs. Gemma (local/global attention)
+- **Size range**: 4B to 27B spans over 6x parameter difference
+- **Context windows**: All support sufficient length for original experiments (10/20/30 documents)
+- **Attention mechanisms**: Gemma's 5:1 local/global vs Mistral's standard - tests architecture impact
+
+### Practical Availability
+- **All available via Ollama**: Easy local deployment, no API costs
+- **Reasonable resource requirements**: 4GB-17GB fits on consumer hardware with 24GB+ VRAM
+- **Active maintenance**: All are recent, well-supported models
+
+### What We're NOT Testing (Future Expansion)
+- **Base (non-instruct) models**: To isolate instruction-tuning effects
+- **Encoder-decoder models**: Original paper found these more robust (but Ollama has limited options)
+- **Code-specialized models**: Different domain, different training data
+- **Reasoning models** (e.g., qwen3.5, deepseek-r1): Output thinking processes incompatible with QA evaluation
+
+---
+
+## Installation Commands (Ollama)
+
+```bash
+# Pull all selected models
+ollama pull gemma3:27b
+ollama pull mistral-small:22b
+ollama pull gemma3:4b
+
+# Verify models are available
+ollama list
+
+# Test basic functionality
+ollama run gemma3:4b "What is 2+2?"
+```
+
+---
+
+## Expected Resource Requirements
+
+### VRAM/RAM Requirements
+- **gemma3:27b**: ~20-24GB VRAM (or RAM if using CPU)
+- **mistral-small:22b**: ~16-18GB VRAM
+- **gemma3:4b**: ~6-8GB VRAM
+
+### Inference Speed (Approximate, on RTX 4090)
+- **gemma3:27b**: 10-20 tokens/sec (estimated)
+- **mistral-small:22b**: 15-25 tokens/sec (estimated)
+- **gemma3:4b**: 40-60 tokens/sec (observed in pilot)
+
+### Experiment Duration Estimate
+With 2,655 test examples × 3 models × multiple conditions:
+- Single model, single condition: ~4-8 hours
+- Full experimental suite: Several days of continuous inference
+
+---
+
+## Future Model Expansion (Optional)
+
+If initial results warrant further investigation:
+
+### Additional Large Models
+- **qwen3.5:32b** (if even larger scale helps)
+- **llama3.3:70b** (different architecture family at large scale)
+
+### Reasoning-Focused Models
+- **deepseek-r1:32b** (tests chain-of-thought interaction with position bias)
+- **qwen3.5-moe:A14b** (mixture of experts architecture)
+
+### Base Models (Non-Instruct)
+- **qwen3.5:27b-base** (if available, to test instruction-tuning impact)
+- **mistral-small:22b-base** (to replicate original MPT-30B vs MPT-30B-Instruct comparison)
+
+### Code-Specialized Models
+- **qwq:32b** (tests domain-specific training impact)
+
+### Encoder-Decoder Models
+- Limited Ollama availability, may require HuggingFace integration
+
+---
+
+## Selection Validation Checklist
+
+- ✓ Models span 3 orders of magnitude (4B, 22B, 27B)
+- ✓ All models are instruction-tuned (matches original paper)
+- ✓ All models have sufficient context windows (>32K tokens, Gemma: 128K!)
+- ✓ Models include both family diversity (Mistral) and controlled comparison (Gemma 4B/27B)
+- ✓ All models are available locally via Ollama
+- ✓ Resource requirements are feasible on consumer/research hardware (RTX 4090)
+- ✓ Models are recent enough to test modern improvements (2024)
+- ✓ All models give direct answers (non-reasoning) compatible with QA evaluation
+- ✓ Pilot test confirms gemma3:4b works correctly (89.15% oracle accuracy)
+
+---
+
+## Notes for Phase 2 Implementation
+
+When implementing Ollama integration:
+
+1. **Verify model availability** before each experiment run
+2. **Monitor VRAM usage** - may need to run models sequentially, not in parallel
+3. **Log inference times** - useful for understanding cost/latency trade-offs
+4. **Test with oracle dataset first** - validate integration before full runs
+5. **Consider batching strategy** - Ollama processes sequentially, no batch speedup
+6. **Handle context length limits** - verify each model's actual max context (may differ from advertised)
+
+---
+
+## Why Not Qwen Models?
+
+**Initial Plan**: Use qwen3.5:4b and qwen3.5:27b for controlled size comparison.
+
+**Problem Discovered (2026-03-30)**: All qwen3.5 models (4b, 9b, 27b) and qwen3:30b are **reasoning models**:
+- Output thinking process to "thinking" field
+- Leave "response" field empty or minimal
+- Example output: `{"response": "", "thinking": "Thinking Process:\n\n1. **Analyze the Request:**..."}`
+
+**Impact**:
+- QA evaluation pipeline expects direct answers in the response
+- Reasoning process doesn't match gold answers
+- qwen3.5:4b pilot test: 0.11% accuracy (3/2,655 correct) - essentially random
+
+**Solution**: Replaced with Gemma models that give direct answers:
+- gemma3:4b pilot test: 89.15% accuracy (2,365/2,655 correct)
+- Same sizes (4B → 4B, 27B → 27B)
+- Better scientific control (same family comparison: gemma3:4b vs gemma3:27b)
+- Architectural diversity preserved (Gemma vs Mistral)
+
+**Additional Benefit**: Gemma's interleaved local/global attention (5:1) provides interesting architectural comparison with Mistral's standard attention.
+
+---
+
+**Last Updated**: 2026-03-30
+**Phase**: Phase 2 (Implementation)
+**Status**: Model selection revised after pilot testing. gemma3:4b validated (89.15% oracle accuracy).

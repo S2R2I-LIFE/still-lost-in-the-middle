@@ -2,6 +2,7 @@ tqdm
 xopen
 pydantic
 pytest
+requests>=2.31.0  # For Ollama HTTP API calls
 
 # For running longchat locally
 longchat@git+https://github.com/DachengLi1/LongChat.git@43d71f03d7711a2ab3b78ee8d1e38b65bb7fd22f
