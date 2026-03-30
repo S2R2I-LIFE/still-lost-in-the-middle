@@ -137,7 +137,23 @@ All original repository files remain untouched:
 
 ---
 
-## [Phase 3 - Analysis] - TBD
+## [Phase 3 - Analysis] - 2026-03-30
+
+### Completed
+- ✅ All 13 experiments executed (34,515 examples)
+- ✅ Evaluation completed for all experiments
+- ✅ Created comprehensive analysis (FINDINGS.md - 15,000 words)
+- ✅ Generated 4 visualization plots (PNG)
+- ✅ Filled in all result tables (RESULTS_SUMMARY.md)
+- ✅ Updated README with actual findings
+- ✅ Prepared research paper appendix
+
+### Key Findings Documented
+- U-shaped curve eliminated in 2024 models
+- Primacy bias persists, recency bias eliminated
+- ~20% less position degradation vs 2023
+- Models effectively use context (2.4-2.8× over closedbook)
+- Architecture matters more than size for position robustness
 
 **Status**: Not started
 

@@ -18,58 +18,168 @@ This work extends the original ["Lost in the Middle: How Language Models Use Lon
 - **Comparing architectures**: Gemma's interleaved local/global attention vs Mistral's standard attention
 - **Full replication**: Multi-document QA with 10-document position bias experiments
 
-### Key Findings (Preliminary)
+### Key Findings ✨
+
+**🎯 Main Discovery**: The U-shaped curve is **GONE!** Modern 2024 models no longer exhibit the classic position bias pattern from 2023.
 
 **Oracle Performance** (Upper Bound - Single Gold Document):
-- gemma3:4b: **89.15%** accuracy (2,365/2,655 correct)
 - gemma3:27b: **90.02%** accuracy (2,389/2,655 correct)
-- mistral-small:22b: Testing in progress
+- gemma3:4b: **89.15%** accuracy (2,365/2,655 correct)
+- mistral-small:22b: **85.99%** accuracy (2,283/2,655 correct)
+
+**10-Document Position Bias** (1 gold + 9 distractors):
+
+| Model | Position 0 (Start) | Position 4 (Middle) | Position 9 (End) | Pattern |
+|-------|-------------------|---------------------|------------------|---------|
+| gemma3:4b | **58.8%** | 55.9% | 55.5% | Gradual decline ↘ |
+| mistral-small:22b | **68.8%** | 67.2% | 63.7% | Gradual decline ↘ |
+| gemma3:27b | **65.9%** | 61.9% | 61.1% | Gradual decline ↘ |
+
+**Closedbook Baseline** (No context): 22.8%
+
+**Key Observations**:
+- ❌ **No U-shape**: Performance doesn't recover at end (position 9 is worst, not better)
+- ✅ **Primacy bias persists**: All models best at start (position 0)
+- ✅ **No recency bias**: Unlike 2023, end position shows worst performance
+- ✅ **Models use context**: 10-doc (55-69%) >> closedbook (23%)
+- ✅ **Less degradation**: ~20% better than 2023 models (28% drop vs 47% in original paper)
 
 **Comparison with Original Paper** (2023):
-- Original MPT-30B-Instruct: 81.66% oracle accuracy
-- Our gemma3:27b (2024): **90.02%** (+8.4% improvement)
+- **2023 Pattern**: START (high) → MIDDLE (low) → END (high) = U-shaped curve
+- **2024 Pattern**: START (high) → MIDDLE (medium) → END (low) = Gradual decline
+- **Improvement**: +4-8% oracle accuracy, ~20% less position degradation
 
-Modern models show better baseline performance, but do they still exhibit the U-shaped position bias curve? Results pending.
+**Conclusion**: Modern models show meaningful progress in handling long contexts, but primacy bias remains a challenge.
+
+### Experimental Details
+
+- **Duration**: ~12 hours on single RTX 4090
+- **Experiments**: 13 experiments × 2,655 examples = 34,515 total predictions
+- **Models Tested**: 3 (Gemma3:4b, Mistral-Small:22b, Gemma3:27b)
+- **Dataset**: NaturalQuestions-Open (Kwiatkowski et al., 2019)
+- **Setup**: Oracle (1 doc), 10-doc positioned (positions 0, 4, 9), Closedbook (0 docs)
 
 ### Quick Start (Ollama Models)
 
 ```bash
-# Install minimal dependencies (no GPU packages needed - Ollama handles it)
+# 1. Install minimal dependencies (no GPU packages needed - Ollama handles it)
 pip install -r requirements-ollama.txt
 
-# Ensure Ollama is running
+# 2. Ensure Ollama is running
 ollama serve
 
-# Pull models
+# 3. Pull models
 ollama pull gemma3:4b
 ollama pull mistral-small:22b
 ollama pull gemma3:27b
 
-# Run experiments (see Context/ directory for full documentation)
+# 4. Verify setup
+python scripts/verify_setup.py
+
+# 5. Run oracle test (baseline)
 python scripts/get_qa_responses_from_ollama.py \
     --model gemma3:4b \
     --input-path qa_data/nq-open-oracle.jsonl.gz \
-    --output-path results/predictions.jsonl.gz \
+    --output-path results/test_oracle.jsonl.gz \
     --temperature 0.0 \
     --max-new-tokens 100
+
+# 6. Evaluate
+python scripts/evaluate_qa_responses.py --input-path results/test_oracle.jsonl.gz
+
+# 7. Run full experiments (see Context/experiment_plan.md)
+bash scripts/run_ollama_experiments.sh
 ```
+
+### Visualizations
+
+<p align="center">
+  <img src="Context/results/position_vs_accuracy.png" width="45%" />
+  <img src="Context/results/2023_vs_2024_comparison.png" width="45%" />
+</p>
+
+**Left**: Position vs accuracy for 2024 models - no U-shaped recovery at end position.
+**Right**: Comparison with 2023 models showing eliminated U-curve but persistent primacy bias.
+
+See [`Context/results/`](./Context/results/) for all visualizations.
 
 ### Documentation
 
 All replication documentation is in the [`Context/`](./Context/) directory:
-- [`Context/summary.md`](./Context/summary.md) - Original paper summary
-- [`Context/models.txt`](./Context/models.txt) - Selected models and rationale
-- [`Context/specs.md`](./Context/specs.md) - Detailed model specifications
-- [`Context/PILOT_RESULTS.md`](./Context/PILOT_RESULTS.md) - Pilot test findings
-- [`Context/RESULTS_SUMMARY.md`](./Context/RESULTS_SUMMARY.md) - Full experimental results
+- **[`Context/FINDINGS.md`](./Context/FINDINGS.md) - 📊 Complete analysis (15,000 words)**
+- [`Context/RESULTS_SUMMARY.md`](./Context/RESULTS_SUMMARY.md) - Detailed result tables
+- [`Context/PILOT_RESULTS.md`](./Context/PILOT_RESULTS.md) - Pilot test journey (includes Qwen reasoning model discovery)
+- [`Context/models.txt`](./Context/models.txt) - Model selection rationale
+- [`Context/specs.md`](./Context/specs.md) - Detailed model specifications (Gemma3, Mistral)
 - [`Context/CHANGELOG.md`](./Context/CHANGELOG.md) - Code modifications log
+
+For the original paper and additional context:
+- **Original Paper**: [arXiv:2307.03172](https://arxiv.org/abs/2307.03172)
+- **Original Repository**: [nelson-liu/lost-in-the-middle](https://github.com/nelson-liu/lost-in-the-middle)
+- **Original Data & Scripts**: Available in the original repository above
+
+### Why This Matters
+
+**For Practitioners**:
+- ✅ **RAG systems more robust**: Modern models handle multi-document context better than 2023
+- ⚠️ **Position still matters**: Place critical information at the start (+3-5% accuracy)
+- ✅ **Full context helps**: Models effectively use all documents (2.4-2.8× better than no context)
+- 🎯 **Architecture matters**: Mistral-Small:22b outperforms larger Gemma3:27b (consider beyond just size)
+
+**For Researchers**:
+- 📈 Progress made: +20% less position degradation in one year
+- 🔍 Open question: What eliminated recency bias? (End position now worst, not better)
+- 🧪 Future work: Test at extreme context lengths (32K-128K tokens), different tasks, more architectures
 
 ### New Code (Ollama Integration)
 
 - [`src/lost_in_the_middle/ollama_client.py`](./src/lost_in_the_middle/ollama_client.py) - Ollama API client
 - [`scripts/get_qa_responses_from_ollama.py`](./scripts/get_qa_responses_from_ollama.py) - QA experiments
 - [`scripts/run_after_mistral.sh`](./scripts/run_after_mistral.sh) - Automated experiment runner
+- [`scripts/create_visualizations.py`](./scripts/create_visualizations.py) - Generate analysis plots
 - [`scripts/monitor_progress.sh`](./scripts/monitor_progress.sh) - Progress monitoring
+
+### License & Attribution
+
+This replication study builds upon the original work by Liu et al. (2023), which is licensed under MIT License.
+
+**Original Work**:
+- **Paper**: Liu, N. F., Lin, K., Hewitt, J., Paranjape, A., Bevilacqua, M., Petroni, F., & Liang, P. (2023). Lost in the Middle: How Language Models Use Long Contexts. *arXiv preprint arXiv:2307.03172*.
+- **Repository**: [github.com/nelson-liu/lost-in-the-middle](https://github.com/nelson-liu/lost-in-the-middle)
+- **License**: MIT License
+
+**This Replication** (new code and analysis):
+- **License**: MIT License (maintaining compatibility)
+- **New Contributions**: Ollama integration, 2024 model testing, updated analysis
+
+### Citation
+
+If you use this replication study, **please cite both** the original work and this replication:
+
+```bibtex
+@misc{lost_in_middle_ollama_2026,
+  title={Lost in the Middle: Ollama Model Replication (2024)},
+  author={[Your Name]},
+  year={2026},
+  howpublished={\url{https://github.com/YOUR_USERNAME/lost-in-the-middle-ollama-replication}},
+  note={Replication study testing position bias in Gemma3 and Mistral models}
+}
+
+@article{liu2023lost,
+  title={Lost in the Middle: How Language Models Use Long Contexts},
+  author={Liu, Nelson F. and Lin, Kevin and Hewitt, John and Paranjape, Ashwin and Bevilacqua, Michele and Petroni, Fabio and Liang, Percy},
+  journal={arXiv preprint arXiv:2307.03172},
+  year={2023}
+}
+```
+
+### Acknowledgments
+
+- **Original Research**: Liu et al. (2023) for the foundational work and open-source codebase under MIT License
+- **Datasets**: NaturalQuestions-Open (Kwiatkowski et al., 2019)
+- **Model Providers**: Google (Gemma3), Mistral AI (Mistral-Small)
+- **Infrastructure**: Ollama team for local inference framework
+- **Development**: Claude Sonnet 4.5 for implementation assistance
 
 ---
 

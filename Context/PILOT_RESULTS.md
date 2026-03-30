@@ -93,8 +93,8 @@ To understand the scope of the problem, we tested multiple Qwen models:
 ### Revised Plan (Post-Pilot)
 | Tier | Model | Size | Parameters | Oracle Acc |
 |------|-------|------|------------|------------|
-| Large | gemma3:27b | 17GB | ~27B | TBD |
-| Medium | mistral-small:22b | 12GB | ~22B | TBD |
+| Large | gemma3:27b | 17GB | ~27B | **90.02%** |
+| Medium | mistral-small:22b | 12GB | ~22B | **85.99%** |
 | Small | gemma3:4b | 3.3GB | ~4B | **89.15%** |
 
 **Rationale**:

@@ -171,3 +171,8 @@ automation_log.txt
 complete_automation_log.txt
 continuation_log.txt
 Context/results/evaluation_log.txt
+
+# Replication study - exclude internal docs
+GITHUB_SETUP.md
+RESEARCH_PAPER_APPENDIX.md
+PRE_COMMIT_CHECKLIST.md

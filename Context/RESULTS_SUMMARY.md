@@ -30,11 +30,11 @@ All results use **best_subspan_em** (best substring exact match):
 
 | Model | best_subspan_em | Correct/Total |
 |-------|-----------------|---------------|
-| gemma3:4b | 0.8915 | 2,365/2,655 |
 | gemma3:27b | 0.9002 | 2,389/2,655 |
-| mistral-small:22b | **TBD** | TBD/2,655 |
+| gemma3:4b | 0.8915 | 2,365/2,655 |
+| mistral-small:22b | 0.8599 | 2,283/2,655 |
 
-**Observation**: Larger gemma3 model (27B) performs slightly better than smaller (4B), both achieve ~89-90% accuracy on oracle task.
+**Observation**: Larger gemma3 model (27B) performs best (90%), followed by gemma3:4b (89%) and mistral-small:22b (86%). All modern models significantly outperform 2023 MPT-30B (82%).
 
 ---
 
@@ -47,27 +47,31 @@ All results use **best_subspan_em** (best substring exact match):
 
 | Gold Position | best_subspan_em | Correct/Total | vs Oracle |
 |---------------|-----------------|---------------|-----------|
-| Position 0 (start) | **TBD** | TBD/~500 | TBD |
-| Position 4 (middle) | **TBD** | TBD/~500 | TBD |
-| Position 9 (end) | **TBD** | TBD/~500 | TBD |
+| Position 0 (start) | 0.5879 | 1,561/2,655 | -30.4% |
+| Position 4 (middle) | 0.5589 | 1,484/2,655 | -33.3% |
+| Position 9 (end) | 0.5552 | 1,474/2,655 | -33.6% |
 
-**Expected pattern**: U-shaped curve if "lost in the middle" persists
+**Observed pattern**: Gradual decline from start to end (NO U-shaped curve)
 
 ### mistral-small:22b (Medium Model)
 
 | Gold Position | best_subspan_em | Correct/Total | vs Oracle |
 |---------------|-----------------|---------------|-----------|
-| Position 0 (start) | **TBD** | TBD/~500 | TBD |
-| Position 4 (middle) | **TBD** | TBD/~500 | TBD |
-| Position 9 (end) | **TBD** | TBD/~500 | TBD |
+| Position 0 (start) | 0.6878 | 1,826/2,655 | -17.2% |
+| Position 4 (middle) | 0.6719 | 1,784/2,655 | -18.8% |
+| Position 9 (end) | 0.6365 | 1,690/2,655 | -22.3% |
+
+**Observed pattern**: Gradual decline, best overall performance across all positions
 
 ### gemma3:27b (Large Model)
 
 | Gold Position | best_subspan_em | Correct/Total | vs Oracle |
 |---------------|-----------------|---------------|-----------|
-| Position 0 (start) | **TBD** | TBD/~500 | TBD |
-| Position 4 (middle) | **TBD** | TBD/~500 | TBD |
-| Position 9 (end) | **TBD** | TBD/~500 | TBD |
+| Position 0 (start) | 0.6591 | 1,750/2,655 | -24.1% |
+| Position 4 (middle) | 0.6192 | 1,644/2,655 | -28.1% |
+| Position 9 (end) | 0.6113 | 1,623/2,655 | -28.9% |
+
+**Observed pattern**: Gradual decline, despite larger size does not outperform mistral-small:22b
 
 ---
 
@@ -78,7 +82,7 @@ All results use **best_subspan_em** (best substring exact match):
 
 | Model | best_subspan_em | Correct/Total | vs Oracle |
 |-------|-----------------|---------------|-----------|
-| gemma3:4b | **TBD** | TBD/2,655 | TBD |
+| gemma3:4b | 0.2279 | 605/2,655 | -66.4% |
 
 ---
 
@@ -89,9 +93,9 @@ All results use **best_subspan_em** (best substring exact match):
 | Model (Year) | Parameters | Oracle Accuracy |
 |--------------|------------|-----------------|
 | **Our Models (2024)** | | |
-| gemma3:4b | ~4B | 0.8915 |
-| mistral-small:22b | ~22B | TBD |
 | gemma3:27b | ~27B | 0.9002 |
+| gemma3:4b | ~4B | 0.8915 |
+| mistral-small:22b | ~22B | 0.8599 |
 | **Original Paper (2023)** | | |
 | MPT-30B-Instruct | 30B | 0.8166 |
 | LongChat-13B-16K | 13B | ~0.82 (est.) |
@@ -104,7 +108,12 @@ All results use **best_subspan_em** (best substring exact match):
 - MPT-30B-Instruct: Position 0: 0.567, Position 19: 0.562, Middle: ~0.3-0.4
 - LongChat-13B-16K: Position 0: 0.686, Position 19: 0.550, Middle: ~0.4-0.5
 
-**Our 10-document results (2024)**: TBD (awaiting evaluation)
+**Our 10-document results (2024)**:
+- Position 0: 59-69% (vs 57-69% in 2023)
+- Position 4 (middle): 56-67% (vs 35-45% in 2023) - **Much better!**
+- Position 9: 56-64% (vs 55-60% in 2023)
+
+**Key difference**: No U-curve in 2024. Middle performance significantly improved.
 
 ---
 
@@ -120,7 +129,7 @@ All results use **best_subspan_em** (best substring exact match):
 - **Recency only**: End high, others low
 - **Primacy only**: Start high, others low
 
-**Result**: **TBD** (awaiting evaluation)
+**Result**: **NO** - U-shaped curve eliminated. Modern models show gradual decline from start to end with no recovery at final position.
 
 ### 2. Does Model Size Affect Position Bias?
 
@@ -128,7 +137,7 @@ All results use **best_subspan_em** (best substring exact match):
 
 **Test**: Compare gemma3:4b vs gemma3:27b position curves (same architecture, different scale).
 
-**Result**: **TBD** (awaiting evaluation)
+**Result**: **NOT STRAIGHTFORWARD** - Mistral-small:22b outperforms larger gemma3:27b across all positions. Architecture matters more than size.
 
 ### 3. Does Architecture Matter?
 
@@ -136,13 +145,17 @@ All results use **best_subspan_em** (best substring exact match):
 
 **Test**: Compare Gemma (local/global attention) vs Mistral (standard attention) position curves.
 
-**Result**: **TBD** (awaiting evaluation)
+**Result**: **YES** - Mistral (standard attention) performs better overall (+2.87% avg), but Gemma shows slightly less degradation (4.78% vs 5.13%).
 
 ### 4. How Much Does Position Hurt?
 
 **Calculation**: Performance degradation = Oracle accuracy - Worst position accuracy
 
-**Result**: **TBD** (awaiting evaluation)
+**Result**:
+- gemma3:4b: -33.6% (89.15% → 55.52%)
+- mistral-small:22b: -22.3% (85.99% → 63.65%)
+- gemma3:27b: -28.9% (90.02% → 61.13%)
+- **Average**: -28.3% (vs ~46% in 2023) - **~20% improvement!**
 
 ### 5. Are Models Using Context or Guessing?
 
