@@ -9,18 +9,13 @@
 >   **Models**- Gemma3 and Mistral were able to respond without thinking tokens, reasoning models such as Qwen3.5 scored 3/2655 on the pilot and were excluded.
  
 
-## 🔬 About This Replication
+## About This Replication
 
-This work extends the original ["Lost in the Middle: How Language Models Use Long Contexts"](https://arxiv.org/abs/2307.03172) (Liu et al., 2023) research by:
+This work extends the original ["Lost in the Middle: How Language Models Use Long Contexts"](https://arxiv.org/abs/2307.03172) (Liu et al., 2023) research by testing modern 2024 models (gemma3:4b, mistral-small:22b, gemma3:27b) using local inference via Ollama. The study compares architectures (Gemma's interleaved local/global attention vs Mistral's standard attention) and replicates the multi-document QA experiments with 10-document position bias tests.
 
-- **Testing modern 2024 models**: gemma3:4b, mistral-small:22b, gemma3:27b
-- **Using local inference**: All experiments run via Ollama (no API costs)
-- **Comparing architectures**: Gemma's interleaved local/global attention vs Mistral's standard attention
-- **Full replication**: Multi-document QA with 10-document position bias experiments
+### Key Findings
 
-### Key Findings ✨
-
-**🎯 Main Discovery**: The U-shaped curve is **GONE!** Modern 2024 models no longer exhibit the classic position bias pattern from 2023.
+Main Discovery: The U-shaped curve is eliminated. Modern 2024 models no longer exhibit the classic position bias pattern from 2023.
 
 **Oracle Performance** (Upper Bound - Single Gold Document):
 - gemma3:27b: **90.02%** accuracy (2,389/2,655 correct)
@@ -31,25 +26,25 @@ This work extends the original ["Lost in the Middle: How Language Models Use Lon
 
 | Model | Position 0 (Start) | Position 4 (Middle) | Position 9 (End) | Pattern |
 |-------|-------------------|---------------------|------------------|---------|
-| gemma3:4b | **58.8%** | 55.9% | 55.5% | Gradual decline ↘ |
-| mistral-small:22b | **68.8%** | 67.2% | 63.7% | Gradual decline ↘ |
-| gemma3:27b | **65.9%** | 61.9% | 61.1% | Gradual decline ↘ |
+| gemma3:4b | **58.8%** | 55.9% | 55.5% | Gradual decline |
+| mistral-small:22b | **68.8%** | 67.2% | 63.7% | Gradual decline |
+| gemma3:27b | **65.9%** | 61.9% | 61.1% | Gradual decline |
 
 **Closedbook Baseline** (No context): 22.8%
 
 **Key Observations**:
-- ❌ **No U-shape**: Performance doesn't recover at end (position 9 is worst, not better)
-- ✅ **Primacy bias persists**: All models best at start (position 0)
-- ✅ **No recency bias**: Unlike 2023, end position shows worst performance
-- ✅ **Models use context**: 10-doc (55-69%) >> closedbook (23%)
-- ✅ **Less degradation**: ~20% better than 2023 models (28% drop vs 47% in original paper)
+- No U-shape: Performance doesn't recover at end (position 9 is worst, not better)
+- Primacy bias persists: All models best at start (position 0)
+- No recency bias: Unlike 2023, end position shows worst performance
+- Models use context: 10-doc accuracy (55-69%) significantly exceeds closedbook (23%)
+- Less degradation: ~20% better than 2023 models (28% drop vs 47% in original paper)
 
 **Comparison with Original Paper** (2023):
-- **2023 Pattern**: START (high) → MIDDLE (low) → END (high) = U-shaped curve
-- **2024 Pattern**: START (high) → MIDDLE (medium) → END (low) = Gradual decline
-- **Improvement**: +4-8% oracle accuracy, ~20% less position degradation
+- 2023 Pattern: START (high) → MIDDLE (low) → END (high) = U-shaped curve
+- 2024 Pattern: START (high) → MIDDLE (medium) → END (low) = Gradual decline
+- Improvement: +4-8% oracle accuracy, ~20% less position degradation
 
-**Conclusion**: Modern models show meaningful progress in handling long contexts, but primacy bias remains a challenge.
+Conclusion: Modern models show meaningful progress in handling long contexts, but primacy bias remains a challenge.
 
 ### Experimental Details
 
@@ -106,30 +101,30 @@ See [`Context/results/`](./Context/results/) for all visualizations.
 ### Documentation
 
 All replication documentation is in the [`Context/`](./Context/) directory:
-- **[`Context/FINDINGS.md`](./Context/FINDINGS.md) - 📊 Complete analysis (15,000 words)**
+- [`Context/FINDINGS.md`](./Context/FINDINGS.md) - Complete analysis (15,000 words)
 - [`Context/RESULTS_SUMMARY.md`](./Context/RESULTS_SUMMARY.md) - Detailed result tables
 - [`Context/PILOT_RESULTS.md`](./Context/PILOT_RESULTS.md) - Pilot test journey (includes Qwen reasoning model discovery)
 - [`Context/models.txt`](./Context/models.txt) - Model selection rationale
 - [`Context/specs.md`](./Context/specs.md) - Detailed model specifications (Gemma3, Mistral)
 - [`Context/CHANGELOG.md`](./Context/CHANGELOG.md) - Code modifications log
 
-For the original paper and additional context:
-- **Original Paper**: [arXiv:2307.03172](https://arxiv.org/abs/2307.03172)
-- **Original Repository**: [nelson-liu/lost-in-the-middle](https://github.com/nelson-liu/lost-in-the-middle)
-- **Original Data & Scripts**: Available in the original repository above
+Original paper and additional context:
+- Original Paper: [arXiv:2307.03172](https://arxiv.org/abs/2307.03172)
+- Original Repository: [nelson-liu/lost-in-the-middle](https://github.com/nelson-liu/lost-in-the-middle)
+- Original Data & Scripts: Available in the original repository above
 
-### Why This Matters
+### Implications
 
 **For Practitioners**:
-- ✅ **RAG systems more robust**: Modern models handle multi-document context better than 2023
-- ⚠️ **Position still matters**: Place critical information at the start (+3-5% accuracy)
-- ✅ **Full context helps**: Models effectively use all documents (2.4-2.8× better than no context)
-- 🎯 **Architecture matters**: Mistral-Small:22b outperforms larger Gemma3:27b (consider beyond just size)
+- RAG systems more robust: Modern models handle multi-document context better than 2023
+- Position still matters: Place critical information at the start (+3-5% accuracy)
+- Full context helps: Models effectively use all documents (2.4-2.8× better than no context)
+- Architecture matters: Mistral-Small:22b outperforms larger Gemma3:27b (consider beyond just size)
 
 **For Researchers**:
-- 📈 Progress made: +20% less position degradation in one year
-- 🔍 Open question: What eliminated recency bias? (End position now worst, not better)
-- 🧪 Future work: Test at extreme context lengths (32K-128K tokens), different tasks, more architectures
+- Progress made: +20% less position degradation in one year
+- Open question: What eliminated recency bias? (End position now worst, not better)
+- Future work: Test at extreme context lengths (32K-128K tokens), different tasks, more architectures
 
 ### New Code (Ollama Integration)
 
