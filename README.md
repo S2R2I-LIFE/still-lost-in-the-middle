@@ -1,6 +1,10 @@
 # Lost in the Middle: Ollama Model Replication (2024)
 
-> **Replication Study**: This repository replicates the "Lost in the Middle" experiments using modern locally-available Ollama models (Gemma3, Mistral) from 2024 to test whether position bias persists in contemporary language models.
+> **Replication Study**: This repository replicates the "Lost in the Middle" experiments using modern locally-available Ollama models (Gemma3, Mistral) from 2024 to test whether position bias persists in contemporary language models. The objective of this experiment is not to disprove or contest any of the original findings but to test how much (if any) progression has occured in one year. 
+> **Defining progression**:
+>   **GPU**- Original study used NVIDIA A100's vs. a single NVIDIA RTX 4090
+>   **Models**- Gemma3 and Mistral were able to respond without thinking tokens, reasoning models such as Qwen3.5 scored 3/2655 on the pilot and were excluded.
+ 
 
 ## 🔬 About This Replication
 
